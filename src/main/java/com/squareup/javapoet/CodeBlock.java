@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -148,15 +149,51 @@ public final class CodeBlock {
   public static Builder builder() {
     return new Builder();
   }
-
+  /**
+   * add lambda support
+   * @param params name for parameters
+   * @return builder
+   */
+  public static LambdaBuilder lambdaBuilder(String... params) {
+    return new LambdaBuilder(params);
+  }
   public Builder toBuilder() {
     Builder builder = new Builder();
     builder.formatParts.addAll(formatParts);
     builder.args.addAll(args);
     return builder;
   }
+  public static final class LambdaBuilder extends Builder {
 
-  public static final class Builder {
+    /**
+     * initing builder
+     * @param params
+     */
+    public LambdaBuilder(String... params) {
+      if (params.length == 0) {
+        throw new InvalidParameterException();
+      } else if (params.length == 1) {
+        add(params[0] + " -> {\n").indent();
+      } else {
+        add("(" + params[0]);
+        for (int i = 1; i < params.length; i++) {
+          add(", " + params[i]);
+        }
+        add(") -> {\n").indent();
+      }
+    }
+
+    /**
+     * build code block
+     * @return
+     */
+    @Override
+    public CodeBlock build() {
+      unindent().add("}");
+      return super.build();
+    }
+  }
+  public static class Builder {
     final List<String> formatParts = new ArrayList<>();
     final List<Object> args = new ArrayList<>();
 
@@ -312,7 +349,7 @@ public final class CodeBlock {
     }
 
     private boolean isNoArgPlaceholder(char c) {
-      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'W' || c == 'Z';
+      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'w' || c == 'z';
     }
 
     private void addArgument(String format, char c, Object arg) {
