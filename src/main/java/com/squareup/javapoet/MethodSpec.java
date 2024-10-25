@@ -531,6 +531,11 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder addStatements(Iterable<CodeBlock> codeBlocks) {
+      code.addStatements(codeBlocks);
+      return this;
+    }
+
     public MethodSpec build() {
       return new MethodSpec(this);
     }

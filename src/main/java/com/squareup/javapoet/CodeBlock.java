@@ -408,6 +408,11 @@ public final class CodeBlock {
       return addStatement("$L", codeBlock);
     }
 
+    public Builder addStatements(Iterable<CodeBlock> codeBlocks) {
+      codeBlocks.forEach(this::addStatement);
+      return this;
+    }
+
     public Builder add(CodeBlock codeBlock) {
       formatParts.addAll(codeBlock.formatParts);
       args.addAll(codeBlock.args);
