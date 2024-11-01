@@ -51,6 +51,13 @@ import static com.squareup.javapoet.Util.checkArgument;
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
 ,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *   <li>{@code $V} emits an <em>inlined-value</em>. The inlined-value can be a primitive,
+ *       {@linkplain Enum an enum value}, {@link Class a class constant}, an instance of a class
+ *       with setters for all non-public instance fields, and arrays, collections, and maps
+ *       containing inlinable values. An inlined-value can be assigned to a variable, passed
+ *       as a parameter to a method, and generally can be used as an object with all its methods
+ *       available for use. The inlined-value will be a raw type; cast to a generic type if
+ *       needed.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $W} emits a space or a newline, depending on its position on the line. This prefers
  *       to wrap lines before 100 columns.
@@ -329,6 +336,9 @@ public final class CodeBlock {
         case 'T':
           this.args.add(argToType(arg));
           break;
+        case 'V':
+          this.args.add(argToInlinedValue(arg));
+          break;
         default:
           throw new IllegalArgumentException(
               String.format("invalid format string: '%s'", format));
@@ -358,6 +368,13 @@ public final class CodeBlock {
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
       throw new IllegalArgumentException("expected type but was " + o);
+    }
+
+    private ObjectInliner.Inlined argToInlinedValue(Object o) {
+      if (o instanceof ObjectInliner.Inlined) {
+        return (ObjectInliner.Inlined) o;
+      }
+      return ObjectInliner.getDefault().inlined(o);
     }
 
     /**

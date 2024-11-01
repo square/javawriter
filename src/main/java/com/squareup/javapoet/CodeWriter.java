@@ -268,6 +268,11 @@ final class CodeWriter {
           typeName.emit(this);
           break;
 
+        case "$V":
+          ObjectInliner.Inlined inlined = (ObjectInliner.Inlined) codeBlock.args.get(a++);
+          inlined.emit(this);
+          break;
+
         case "$$":
           emitAndIndent("$");
           break;

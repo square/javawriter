@@ -389,6 +389,144 @@ public final class HelloWorld {
 }
 ```
 
+### $V for inlined values
+
+Sometimes you have an object that you want to reconstruct in generated code.
+But that object has over 20 fields, and each of those fields has over 20 fields.
+To simplify this reconstruction process, you can use **`$V`** to emit an **inlined** value:
+
+```java
+import com.squareup.javapoet.ObjectInliner;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner inliner = new ObjectInliner()
+         .trustExactTypes(MyComplexConfig.class);
+ return MethodSpec.methodBuilder(name)
+         .returns(int.class)
+         .addStatement("return MyComplexCalculation.calculate($V);", inliner.inlined(config))
+         .build();
+}
+```
+
+Inlined values are constructed inside a generated `java.util.function.Supplier` lambda that constructs
+the value from its fields.
+For the above example, the generated code might look like this:
+```java
+int name() {
+    return MyComplexCalculation.calculate(
+            ((MyComplexConfig)((java.util.function.Supplier)(() -> {
+               MyComplexConfig $$javapoet$MyComplexConfig = new MyComplexConfig();
+               $$javapoet$MyComplexConfig.setParameter1(1);
+               $$javapoet$MyComplexConfig.setParameter2("abc");
+               // ...
+               return $$javapoet$MyComplexConfig;
+            })).get()));
+}
+```
+The generated code will invoke getters and setters on the passed instance,
+so make sure you **trust** any values you inline with **`$V`**.
+By default, only `java.lang.Object` is trusted.
+You can trust additional object types by calling `trustExactTypes` and
+`trustTypesAssignableTo`:
+
+```java
+import com.squareup.javapoet.ObjectInliner;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner inliner = new ObjectInliner()
+         .trustTypesAssignableTo(List.class)
+         .trustExactTypes(MyComplexConfig.class);
+ //...
+}
+```
+If you trust everything, you can call `trustEverything`. Although please don't do this with user controlled instances.
+
+```java
+import com.squareup.javapoet.ObjectInliner;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner inliner = new ObjectInliner()
+         .trustEverything();
+ //...
+}
+```
+
+If you don't pass an instance of `ObjectInliner.Inlined`, it will be
+inlined by `ObjectInliner.getDefault()`.
+
+```java
+import com.squareup.javapoet.ObjectInliner;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner.getDefault()
+         .trustEverything();
+ return MethodSpec.methodBuilder(name)
+         .returns(int.class)
+         // config will be inlined by ObjectInliner.getDefault()
+         .addStatement("return MyComplexCalculation.calculate($V);", config)
+         .build();
+}
+```
+
+By default, the following objects can be inlined if trusted:
+
+- Primitives and their boxed types (trusted by default)
+- String (trusted by default)
+- `java.lang.Class` (trusted by default)
+- Instances of `java.lang.Enum` (trusted by default)
+- Arrays of inlinable trusted objects (trusted by default)
+- Lists, Sets, and Maps of inlineable trusted objects (not trusted by default)
+- Objects that have public setters for all non-public fields (not trusted by default)
+- Records of inlineable trusted objects (not trusted by default)
+
+You can register custom inliners for types not covered by the above using `TypeInliner`:
+
+```java
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ObjectEmitter;
+import com.squareup.javapoet.TypeInliner;
+import com.squareup.javapoet.ObjectInliner;
+
+import java.time.Duration;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner.getDefault()
+         .trustEverything()
+         .addTypeInliner(new TypeInliner() {
+          @Override
+          public boolean canInline(Object object) {
+           return object instanceof Duration;
+          }
+
+          @Override
+          public String inline(ObjectEmitter emitter, Object instance) {
+           Duration duration = (Duration) instance;
+           return CodeBlock.of("$T.ofNanos($V);", Duration.class, emitter.inlined(duration.toNanos())).toString();
+          }
+         });
+ return MethodSpec.methodBuilder(name)
+         .returns(int.class)
+         .addStatement("return MyComplexCalculation.calculate($V);", Duration.ofSeconds(1L))
+         .build();
+}
+```
+
+If the default name prefix `$$javapoet$` conflicts with any variables in your generated code,
+you can specify a different one using `useNamePrefix`:
+
+```java
+import com.squareup.javapoet.ObjectInliner;
+
+private MethodSpec computeSomething(String name, MyComplexConfig config) {
+ ObjectInliner.getDefault()
+         .useNamePrefix("myPrefix");
+ return MethodSpec.methodBuilder(name)
+         .returns(int.class)
+         .addStatement("return MyComplexCalculation.calculate($V);", config)
+         .build();
+}
+```
+
 #### Import static
 
 JavaPoet supports `import static`. It does it via explicitly collecting type member names. Let's

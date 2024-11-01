@@ -124,6 +124,14 @@ public final class CodeBlockTest {
     assertThat(block.toString()).isEqualTo("java.lang.String");
   }
 
+  @Test public void inlinedValueFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1V", "taco").build();
+    assertThat(block.toString().replaceAll("\\s+", "")).isEqualTo(
+            ("((java.lang.String)((java.util.function.Supplier)(()->{\n" +
+            "    return \"taco\";\n" +
+            "    })).get())").replaceAll("\\s+", ""));
+  }
+
   @Test public void simpleNamedArgument() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("text", "taco");
