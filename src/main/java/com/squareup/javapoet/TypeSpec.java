@@ -59,6 +59,7 @@ public final class TypeSpec {
   public final List<FieldSpec> fieldSpecs;
   public final CodeBlock staticBlock;
   public final CodeBlock initializerBlock;
+  public final CodeBlock initializerComment;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   final Set<String> nestedTypesSimpleNames;
@@ -79,6 +80,7 @@ public final class TypeSpec {
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
     this.staticBlock = builder.staticBlock.build();
     this.initializerBlock = builder.initializerBlock.build();
+    this.initializerComment = builder.initializerComment.build();
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
     this.alwaysQualifiedNames = Util.immutableSet(builder.alwaysQualifiedNames);
@@ -113,6 +115,7 @@ public final class TypeSpec {
     this.fieldSpecs = Collections.emptyList();
     this.staticBlock = type.staticBlock;
     this.initializerBlock = type.initializerBlock;
+    this.initializerComment = type.initializerComment;
     this.methodSpecs = Collections.emptyList();
     this.typeSpecs = Collections.emptyList();
     this.originatingElements = Collections.emptyList();
@@ -177,6 +180,7 @@ public final class TypeSpec {
     builder.methodSpecs.addAll(methodSpecs);
     builder.typeSpecs.addAll(typeSpecs);
     builder.initializerBlock.add(initializerBlock);
+    builder.initializerComment.add(initializerComment);
     builder.staticBlock.add(staticBlock);
     builder.originatingElements.addAll(originatingElements);
     builder.alwaysQualifiedNames.addAll(alwaysQualifiedNames);
@@ -302,7 +306,12 @@ public final class TypeSpec {
         firstMember = false;
       }
 
-      // Initializer block.
+      // Initializer comment + block.
+      if (!initializerComment.isEmpty()) {
+        if (!firstMember) codeWriter.emit("\n");
+        codeWriter.emitComment(initializerComment);
+        firstMember = false;
+      }
       if (!initializerBlock.isEmpty()) {
         if (!firstMember) codeWriter.emit("\n");
         codeWriter.emit(initializerBlock);
@@ -417,6 +426,7 @@ public final class TypeSpec {
     private TypeName superclass = ClassName.OBJECT;
     private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
+    private final CodeBlock.Builder initializerComment = CodeBlock.builder();
 
     public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     public final List<AnnotationSpec> annotations = new ArrayList<>();
@@ -623,6 +633,16 @@ public final class TypeSpec {
           .add(block)
           .unindent()
           .add("}\n");
+      return this;
+    }
+
+    public Builder addInitializerComment(String format, Object... args) {
+      initializerComment.add(format, args);
+      return this;
+    }
+
+    public Builder addInitializerComment(CodeBlock block) {
+      initializerComment.add(block);
       return this;
     }
 
