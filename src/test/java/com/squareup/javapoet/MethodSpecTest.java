@@ -45,6 +45,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 import static com.squareup.javapoet.TestUtil.findFirst;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
@@ -396,10 +398,10 @@ public final class MethodSpecTest {
 
   @Test public void modifyModifiers() {
     MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
-            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+            .addModifiers(PUBLIC, STATIC);
 
     builder.modifiers.remove(1);
-    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+    assertThat(builder.build().modifiers).containsExactly(PUBLIC);
   }
 
   @Test public void modifyParameters() {
@@ -480,6 +482,26 @@ public final class MethodSpecTest {
         "  } while (valueField > 5);\n" +
         "}\n");
   }
+
+    @Test
+    public void useTypeSpecForMethodParameter() {
+        TypeSpec typeA = TypeSpec.classBuilder(ClassName.get("com.foo", "A"))
+                .addMethod(MethodSpec.constructorBuilder()
+                        .addModifiers(PUBLIC).build())
+                .build();
+        TypeSpec typeB = TypeSpec.classBuilder(ClassName.get("com.foo", "B"))
+                .addMethod(MethodSpec.methodBuilder("createA")
+                        .addModifiers(STATIC, PUBLIC)
+                        .returns(typeA.getClassName())
+                        .addStatement("return new $T", typeA.getClassName())
+                        .build())
+                .build();
+        assertThat(typeB.toString()).isEqualTo("class B {\n" +
+                "  public static com.foo.A createA() {\n" +
+                "    return new com.foo.A;\n" +
+                "  }\n" +
+                "}\n");
+    }
 
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();

@@ -265,6 +265,14 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
+  public static Builder builder(TypeSpec typeSpec) {
+    ClassName className = typeSpec.getClassName();
+    String packageName = className.packageName;
+    checkNotNull(packageName, "packageName == null");
+    checkNotNull(typeSpec, "typeSpec == null");
+    return new Builder(packageName, typeSpec);
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(packageName, typeSpec);
     builder.fileComment.add(fileComment);

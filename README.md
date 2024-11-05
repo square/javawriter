@@ -369,6 +369,28 @@ MethodSpec beyond = MethodSpec.methodBuilder("beyond")
     .build();
 ```
 
+Sometimes, you'll generate a `TypeSpec` and require its `ClassName` later, for example, in a 
+method declaration. If that is the case, create the `TypeSpec` instance using a `ClassName` object, and you'll 
+be able to retrieve that `ClassName` from the instance:
+
+```
+// We'll need the ClassName later, so we provide it when obtaining the builder:
+TypeSpec typeA = TypeSpec.classBuilder(ClassName.get("com.foo", "A"))
+    .addMethod(MethodSpec.constructorBuilder()
+        .addModifiers(PUBLIC).build())
+    .build();
+                
+// Now, we can use typeA.getClassName() to retrieve it 
+// (see the line that starts with '.returns' )
+TypeSpec typeB = TypeSpec.classBuilder(ClassName.get("com.foo", "B"))
+    .addMethod(MethodSpec.methodBuilder("createA")
+        .addModifiers(STATIC, PUBLIC)
+        .returns(typeA.getClassName())
+        .addStatement("return new $T", typeA.getClassName())
+        .build())
+    .build();
+```
+
 JavaPoet will decompose each type and import its components where possible.
 
 ```java

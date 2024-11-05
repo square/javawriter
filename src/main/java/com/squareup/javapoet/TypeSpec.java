@@ -47,6 +47,7 @@ import static com.squareup.javapoet.Util.requireExactlyOneOf;
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
   public final Kind kind;
+  private final ClassName className;
   public final String name;
   public final CodeBlock anonymousTypeArguments;
   public final CodeBlock javadoc;
@@ -68,6 +69,7 @@ public final class TypeSpec {
   private TypeSpec(Builder builder) {
     this.kind = builder.kind;
     this.name = builder.name;
+    this.className = builder.className;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
@@ -102,6 +104,7 @@ public final class TypeSpec {
     assert type.anonymousTypeArguments == null;
     this.kind = type.kind;
     this.name = type.name;
+    this.className = type.className;
     this.anonymousTypeArguments = null;
     this.javadoc = type.javadoc;
     this.annotations = Collections.emptyList();
@@ -129,7 +132,7 @@ public final class TypeSpec {
   }
 
   public static Builder classBuilder(ClassName className) {
-    return classBuilder(checkNotNull(className, "className == null").simpleName());
+    return new Builder(Kind.CLASS, checkNotNull(className, "className == null"), null);
   }
 
   public static Builder interfaceBuilder(String name) {
@@ -137,7 +140,7 @@ public final class TypeSpec {
   }
 
   public static Builder interfaceBuilder(ClassName className) {
-    return interfaceBuilder(checkNotNull(className, "className == null").simpleName());
+    return new Builder(Kind.INTERFACE, checkNotNull(className, "className == null"), null);
   }
 
   public static Builder enumBuilder(String name) {
@@ -145,7 +148,7 @@ public final class TypeSpec {
   }
 
   public static Builder enumBuilder(ClassName className) {
-    return enumBuilder(checkNotNull(className, "className == null").simpleName());
+    return new Builder(Kind.ENUM, checkNotNull(className, "className == null"), null);
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
@@ -153,7 +156,7 @@ public final class TypeSpec {
   }
 
   public static Builder anonymousClassBuilder(CodeBlock typeArguments) {
-    return new Builder(Kind.CLASS, null, typeArguments);
+    return new Builder(Kind.CLASS, (String) null, typeArguments);
   }
 
   public static Builder annotationBuilder(String name) {
@@ -161,7 +164,7 @@ public final class TypeSpec {
   }
 
   public static Builder annotationBuilder(ClassName className) {
-    return annotationBuilder(checkNotNull(className, "className == null").simpleName());
+    return new Builder(Kind.ANNOTATION, checkNotNull(className, "className == null"), null);
   }
 
   public Builder toBuilder() {
@@ -189,7 +192,6 @@ public final class TypeSpec {
     // it back afterwards when this type is complete.
     int previousStatementLine = codeWriter.statementLine;
     codeWriter.statementLine = -1;
-
     try {
       if (enumName != null) {
         codeWriter.emitJavadoc(javadoc);
@@ -212,7 +214,6 @@ public final class TypeSpec {
       } else {
         // Push an empty type (specifically without nested types) for type-resolution.
         codeWriter.pushType(new TypeSpec(this));
-
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
         codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
@@ -256,7 +257,6 @@ public final class TypeSpec {
         }
 
         codeWriter.popType();
-
         codeWriter.emit(" {\n");
       }
 
@@ -335,7 +335,6 @@ public final class TypeSpec {
       codeWriter.unindent();
       codeWriter.popType();
       codeWriter.popTypeVariables(typeVariables);
-
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
         codeWriter.emit("\n"); // If this type isn't also a value, include a trailing newline.
@@ -343,6 +342,14 @@ public final class TypeSpec {
     } finally {
       codeWriter.statementLine = previousStatementLine;
     }
+  }
+
+  public ClassName getClassName() {
+    if (className == null) {
+      throw new NullPointerException("className property is only available if "
+          + "TypeSpec.Builder is instantiated with a ClassName object");
+    }
+    return className;
   }
 
   @Override public boolean equals(Object o) {
@@ -411,6 +418,7 @@ public final class TypeSpec {
   public static final class Builder {
     private final Kind kind;
     private final String name;
+    private final ClassName className;
     private final CodeBlock anonymousTypeArguments;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
@@ -434,6 +442,17 @@ public final class TypeSpec {
       checkArgument(name == null || SourceVersion.isName(name), "not a valid name: %s", name);
       this.kind = kind;
       this.name = name;
+      this.className = null;
+      this.anonymousTypeArguments = anonymousTypeArguments;
+    }
+
+    private Builder(Kind kind, ClassName className,
+        CodeBlock anonymousTypeArguments) {
+      checkArgument(className == null || SourceVersion.isName(className.simpleName()),
+          "not a valid name: %s", className.toString());
+      this.kind = kind;
+      this.name = className.simpleName;
+      this.className = className;
       this.anonymousTypeArguments = anonymousTypeArguments;
     }
 
