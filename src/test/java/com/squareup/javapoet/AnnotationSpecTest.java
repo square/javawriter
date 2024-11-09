@@ -383,6 +383,86 @@ public final class AnnotationSpecTest {
     assertThat(builder.build().toString()).isEqualTo("@java.lang.SuppressWarnings(\"Bar\")");
   }
 
+
+  @Test public void addMembersWithAnnotationSpec(){
+    String packageName = "package com.squareup.computerScience;";
+    ClassName java = ClassName.get(packageName, "Java");
+    ClassName language = ClassName.get(packageName, "Language");
+    ClassName computerScience = ClassName.get(packageName, "ComputerScience");
+
+    AnnotationSpec javaAnnotation = AnnotationSpec.builder(language)
+            .addMember("name", "$S", "function")
+            .addMember("language", "$T.class", java)
+            .build();
+
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(computerScience);
+    AnnotationSpec computerScienceAnnotation = AnnotationSpec.addMembers(builder, "ComputerScience", "$L"
+            , javaAnnotation).build();
+    assertThat(computerScienceAnnotation.toString()).isEqualTo(
+            "@package com.squareup.computerScience;" +
+                    ".ComputerScience" +
+                    "(" +
+                    "ComputerScience = @package com.squareup.computerScience;" +
+                    ".Language" +
+                    "(" +
+                    "name = \"function\", language = package com.squareup.computerScience;" +
+                    ".Java.class" +
+                    ")" +
+                    ")");
+  }
+
+
+  @Test public void addMembersWithMoreAnnotationSpec(){
+    String packageName = "package com.squareup.computerScience;";
+    ClassName pytorch = ClassName.get(packageName, "Pytorch");
+    ClassName tensorflow = ClassName.get(packageName, "Tensorflow");
+    ClassName mxnet = ClassName.get(packageName, "MXNet");
+    ClassName dlFramework = ClassName.get(packageName, "DeepLearningFramework");
+    ClassName python = ClassName.get(packageName, "Python");
+
+    AnnotationSpec pytorchAnnotation = AnnotationSpec.builder(dlFramework)
+            .addMember("name", "$S", "function")
+            .addMember("DeepLearningFramework", "$T.class", pytorch)
+            .build();
+
+    AnnotationSpec tfAnnotation = AnnotationSpec.builder(dlFramework)
+            .addMember("name", "$S", "function")
+            .addMember("DeepLearningFramework", "$T.class", tensorflow)
+            .build();
+
+    AnnotationSpec mxnetAnnotation = AnnotationSpec.builder(dlFramework)
+            .addMember("name", "$S", "function")
+            .addMember("DeepLearningFramework", "$T.class", mxnet)
+            .build();
+
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(python);
+    AnnotationSpec pythonAnnotation = AnnotationSpec.addMembers(builder, "DeepLearningFramework", "$L"
+            , pytorchAnnotation, tfAnnotation, mxnetAnnotation).build();
+    assertThat(pythonAnnotation.toString()).isEqualTo("" +
+            "@package com.squareup.computerScience;" +
+            ".Python" +
+            "(" +
+            "DeepLearningFramework = " +
+            "{" +
+            "@package com.squareup.computerScience;" +
+            ".DeepLearningFramework" +
+            "(" +
+            "name = \"function\", DeepLearningFramework = package com.squareup.computerScience;.Pytorch.class" +
+            "), " +
+            "@package com.squareup.computerScience;" +
+            ".DeepLearningFramework" +
+            "(" +
+            "name = \"function\", DeepLearningFramework = package com.squareup.computerScience;.Tensorflow.class" +
+            "), " +
+            "@package com.squareup.computerScience;" +
+            ".DeepLearningFramework" +
+            "(" +
+            "name = \"function\", DeepLearningFramework = package com.squareup.computerScience;.MXNet.class" +
+            ")" +
+            "}" +
+            ")\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder("com.squareup.tacos", typeSpec).build().toString();
   }

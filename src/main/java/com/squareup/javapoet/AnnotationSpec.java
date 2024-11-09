@@ -19,14 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -249,6 +242,52 @@ public final class AnnotationSpec {
       return new AnnotationSpec(this);
     }
   }
+
+  /**
+   *
+   * @param builder The AnnotationSpec.Builder that you want to add in;
+   * @param name The name of the AnnotationSpec;
+   * @param format The format of the @name;
+   * @param specs The AnnotationSpec that be added in;
+   * @return the AnnotationSpec.Builder that be added with @specs
+   */
+  public static AnnotationSpec.Builder addMembers(AnnotationSpec.Builder builder, String name, String format, AnnotationSpec... specs) {
+    final List<CodeBlock> codeBlocks = new ArrayList<>();
+    for (AnnotationSpec spec : specs) {
+      codeBlocks.add(CodeBlock.of(format, spec));
+    }
+    return addMembers(builder, name, codeBlocks);
+  }
+
+  /**
+   *
+   * @param builder The AnnotationSpec.Builder that you want to add in;
+   * @param name The name of the AnnotationSpec;
+   * @param format The format of the @name;
+   * @param specs The AnnotationSpec that be added in, speciticly, a Collection with AnnotationSpecs;
+   * @return the AnnotationSpec.Builder that be added with @specs
+   */
+  public static AnnotationSpec.Builder addMembers(AnnotationSpec.Builder builder, String name, String format, Collection<AnnotationSpec> specs) {
+    final List<CodeBlock> codeBlocks = new ArrayList<>();
+    for (AnnotationSpec spec : specs) {
+      codeBlocks.add(CodeBlock.of(format, spec));
+    }
+    return addMembers(builder, name, codeBlocks);
+  }
+
+  /**
+   *
+   * @param builder The AnnotationSpec.Builder that you want to add in;
+   * @param name The name of the AnnotationSpec;
+   * @param codeBlocks The CodeBlocks that be added in, speciticly, a Collection with AnnotationSpecs;
+   * @return the AnnotationSpec.Builder that be added with @codeBlocks
+   */
+  public static AnnotationSpec.Builder addMembers(AnnotationSpec.Builder builder, String name, Collection<CodeBlock> codeBlocks) {
+    final List<CodeBlock> values = builder.members.computeIfAbsent(name, k -> new ArrayList<>());
+    values.addAll(codeBlocks);
+    return builder;
+  }
+
 
   /**
    * Annotation value visitor adding members to the given builder instance.
