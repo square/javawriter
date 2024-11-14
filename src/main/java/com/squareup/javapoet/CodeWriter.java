@@ -401,8 +401,16 @@ final class CodeWriter {
 
     // If the class is in the same package, we're done.
     if (Objects.equals(packageName, className.packageName())) {
-      referencedNames.add(topLevelSimpleName);
-      return join(".", className.simpleNames());
+      String conflictClassName = packageName+"."+className.simpleName;//From same package (Nest)
+      //For nested conflict situation, the simpleName should be in QualifyList
+      //But its full name dont contains its super name
+      if(alwaysQualify.contains(className.simpleName)
+              &&Objects.equals(conflictClassName,className.canonicalName)){
+
+      }else{//If not, do regular trim
+        referencedNames.add(topLevelSimpleName);
+        return join(".", className.simpleNames());
+      }
     }
 
     // We'll have to use the fully-qualified name. Mark the type as importable for a future pass.

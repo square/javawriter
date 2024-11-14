@@ -757,6 +757,50 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void avoidClashesWithNestedClasses_SamePackageTest() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+            TypeSpec.classBuilder("Taco")
+                    // The external Name should be full
+                    .addField(ClassName.get(com.squareup.javapoet.Nest.class), "external_Nest")
+                    // The internal Name would be better with super name
+                    .addField(ClassName.get(com.squareup.javapoet.FooInterface.Nest.class), "interface_Nest")
+                    .addSuperinterface(com.squareup.javapoet.FooInterface.class)
+                    .build())
+            .build()
+            .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n" +
+            "\n" +
+            "class Taco implements FooInterface {\n" +
+            "  com.squareup.javapoet.Nest external_Nest;\n" +
+            "\n" +
+            "  FooInterface.Nest interface_Nest;\n" +
+            "}"+"\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_InterExterPackageTest() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+            TypeSpec.classBuilder("Taco")
+                    // The external Name should be full
+                    .addField(ClassName.get(com.squareup.javapoet.Nest.class), "external_Nest")
+                    // The internal Name would be better with super name
+                    .addField(ClassName.get(com.squareup.javapoet.FooInterface.Nest.class), "interface_Nest")
+                    // The external Name from external package
+                    .addField(ClassName.get("other","Nest"), "interface_Nest")
+                    .addSuperinterface(com.squareup.javapoet.FooInterface.class)
+                    .build())
+            .build()
+            .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n" +
+            "\n" +
+            "class Taco implements FooInterface {\n" +
+            "  com.squareup.javapoet.Nest external_Nest;\n" +
+            "\n" +
+            "  FooInterface.Nest interface_Nest;\n" +
+            "\n" +
+            "  other.Nest interface_Nest;\n" +
+            "}"+"\n");
+  }
+
   @Test public void avoidClashesWithNestedClasses_viaClass() {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
@@ -874,6 +918,10 @@ public final class JavaFileTest {
     class NestedTypeB {
 
     }
+  }
+
+  static class NestedTypeA{
+
   }
 
   private TypeSpec.Builder childTypeBuilder() {
