@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import com.google.testing.compile.CompilationRule;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
@@ -111,16 +112,26 @@ public class ParameterSpecTest {
     }
   }
 
+
+  private ExecutableElement findFirstExecutable(Collection<ExecutableElement> elements, String name) {
+    for (ExecutableElement executableElement : elements) {
+      if (executableElement.getSimpleName().toString().equals(name)) {
+        return executableElement;
+      }
+    }
+
+    throw new IllegalArgumentException(name + " not found in " + elements);
+  }
+
   @Test public void parameterVariableElement() {
     TypeElement classElement = getElement(VariableElementParameterClass.class);
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement element = findFirst(methods, "foo");
+    ExecutableElement element = findFirstExecutable(methods, "foo");
     VariableElement parameterElement = element.getParameters().get(0);
 
     assertThat(ParameterSpec.get(parameterElement).toString())
-        .isEqualTo("java.lang.String arg0");
+            .isEqualTo("java.lang.String bar");
   }
-
   @Test public void addNonFinalModifier() {
     List<Modifier> modifiers = new ArrayList<>();
     modifiers.add(Modifier.FINAL);
