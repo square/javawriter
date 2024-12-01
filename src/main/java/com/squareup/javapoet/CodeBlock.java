@@ -42,7 +42,7 @@ import static com.squareup.javapoet.Util.checkArgument;
  *   <li>{@code $L} emits a <em>literal</em> value with no escaping. Arguments for literals may be
  *       strings, primitives, {@linkplain TypeSpec type declarations}, {@linkplain AnnotationSpec
  *       annotations} and even other code blocks.
- *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary. Arguments
+ *   <li>{@code $N} emits a <em>name</em>. Arguments
  *       for names may be strings (actually any {@linkplain CharSequence character sequence}),
  *       {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec fields}, {@linkplain
  *       MethodSpec methods}, and {@linkplain TypeSpec types}.
