@@ -451,7 +451,19 @@ public final class MethodSpec {
     }
 
     public Builder addComment(String format, Object... args) {
-      code.add("// " + format + "\n", args);
+      CodeBlock.Builder tempCode = CodeBlock.builder();
+      tempCode.add(format, args);
+      String newFormat = tempCode.build().toString();
+      String[] lines = newFormat.split("\\R");
+      if (lines.length == 1) {
+        code.add("// " + lines[0] + "\n");
+      } else {
+        code.add("/*\n");
+        for (String line : lines) {
+          code.add(" * " + line + "\n");
+        }
+        code.add(" */\n");
+      }
       return this;
     }
 
