@@ -348,4 +348,19 @@ public final class CodeBlockTest {
 
     assertThat(block.toString()).isEmpty();
   }
+
+  @Test public void canTapInto() {
+    CodeBlock block = CodeBlock.builder()
+            .addStatement("int x = 0")
+            .tap(b -> {
+              int value = 666;
+              b.addStatement("int y = $L", value);
+            })
+            .build();
+    assertThat(block.toString()).isEqualTo(""
+      + "int x = 0;\n"
+      + "int y = 666;\n"
+    );
+
+  }
 }

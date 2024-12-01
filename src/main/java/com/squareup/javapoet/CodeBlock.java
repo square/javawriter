@@ -156,7 +156,7 @@ public final class CodeBlock {
     return builder;
   }
 
-  public static final class Builder {
+  public static final class Builder implements Tapable<Builder> {
     final List<String> formatParts = new ArrayList<>();
     final List<Object> args = new ArrayList<>();
 

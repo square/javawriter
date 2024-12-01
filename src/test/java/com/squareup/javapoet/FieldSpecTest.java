@@ -63,4 +63,12 @@ public class FieldSpecTest {
     builder.modifiers.remove(1);
     assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
   }
+
+  @Test public void canTapInto() {
+    FieldSpec.Builder builder = FieldSpec.builder(int.class, "foo")
+            .tap(f -> f.addModifiers(Modifier.PUBLIC, Modifier.STATIC));
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
 }

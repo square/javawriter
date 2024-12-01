@@ -2604,7 +2604,7 @@ public final class TypeSpecTest {
     builder.originatingElements.clear();
     assertThat(builder.build().originatingElements).isEmpty();
   }
-    
+
   @Test public void javadocWithTrailingLineDoesNotAddAnother() {
     TypeSpec spec = TypeSpec.classBuilder("Taco")
         .addJavadoc("Some doc with a newline\n")
@@ -2633,5 +2633,25 @@ public final class TypeSpecTest {
         + " */\n"
         + "class Taco {\n"
         + "}\n");
+  }
+
+  @Test public void canTapInto() {
+    TypeSpec spec = TypeSpec.classBuilder("Taco")
+            .tap(b -> {
+              for (int i = 0; i<2; i++) {
+                b.addMethod(MethodSpec.methodBuilder("foo" + i).build());
+              }
+            })
+            .build();
+
+      assertThat(toString(spec)).isEqualTo(""
+              + "package com.squareup.tacos;\n"
+              + "\n"
+              + "class Taco {\n"
+              + "  void foo0() {\n"
+              + "  }\n\n"
+              + "  void foo1() {\n"
+              + "  }\n"
+              + "}\n");
   }
 }

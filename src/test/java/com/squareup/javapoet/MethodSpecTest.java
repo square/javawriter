@@ -481,6 +481,38 @@ public final class MethodSpecTest {
         "}\n");
   }
 
+  @Test public void canTapIntoMethod() {
+    MethodSpec spec = MethodSpec.methodBuilder("method")
+            .tap(body -> {
+              for (int i = 0; i<2; i++) {
+                body.addStatement("System.out.println($S)", "Hello " + i);
+              }
+            })
+            .build();
+
+    assertThat(spec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  System.out.println(\"Hello 0\");\n"
+            + "  System.out.println(\"Hello 1\");\n"
+            + "}\n");
+  }
+
+  @Test public void canTapIntoConstructor() {
+    MethodSpec spec = MethodSpec.constructorBuilder()
+            .tap(body -> {
+              for (int i = 0; i<2; i++) {
+                body.addStatement("System.out.println($S)", "Hello " + i);
+              }
+            })
+            .build();
+
+    assertThat(spec.toString()).isEqualTo(""
+            + "Constructor() {\n"
+            + "  System.out.println(\"Hello 0\");\n"
+            + "  System.out.println(\"Hello 1\");\n"
+            + "}\n");
+  }
+
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();
   }

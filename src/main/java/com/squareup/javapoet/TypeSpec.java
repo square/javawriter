@@ -408,7 +408,7 @@ public final class TypeSpec {
     }
   }
 
-  public static final class Builder {
+  public static final class Builder implements Tapable<Builder> {
     private final Kind kind;
     private final String name;
     private final CodeBlock anonymousTypeArguments;

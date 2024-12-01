@@ -291,7 +291,7 @@ public final class MethodSpec {
     return builder;
   }
 
-  public static final class Builder {
+  public static final class Builder implements Tapable<Builder> {
     private String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();

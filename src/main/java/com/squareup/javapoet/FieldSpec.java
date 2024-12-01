@@ -106,7 +106,7 @@ public final class FieldSpec {
     return builder;
   }
 
-  public static final class Builder {
+  public static final class Builder implements Tapable<Builder> {
     private final TypeName type;
     private final String name;
 

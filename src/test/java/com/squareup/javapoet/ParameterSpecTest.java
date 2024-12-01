@@ -151,4 +151,12 @@ public class ParameterSpecTest {
     builder.modifiers.remove(1);
     assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
   }
+
+  @Test public void canTapInto() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .tap(p -> p.addModifiers(Modifier.PUBLIC, Modifier.STATIC));
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
 }
