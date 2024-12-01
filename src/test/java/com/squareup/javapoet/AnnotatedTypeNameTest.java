@@ -81,6 +81,12 @@ public class AnnotatedTypeNameTest {
     assertThat(actual.toString()).isEqualTo("java.util. @" + TUA + " List<java.lang.String>");
   }
 
+  @Test public void annotatedParameterizedTypeAgain() {
+    TypeName type = ParameterizedTypeName.get(List.class, String.class);
+    TypeName actual = type.annotated(TYPE_USE_ANNOTATION).annotated();  // see issues/933
+    assertThat(actual.toString()).isEqualTo("java.util. @" + TUA + " List<java.lang.String>");
+  }
+
   @Test public void annotatedArgumentOfParameterizedType() {
     TypeName type = TypeName.get(String.class).annotated(TYPE_USE_ANNOTATION);
     TypeName actual = ParameterizedTypeName.get(ClassName.get(List.class), type);
