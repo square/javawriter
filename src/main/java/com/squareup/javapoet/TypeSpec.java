@@ -473,6 +473,19 @@ public final class TypeSpec {
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }
+    /**
+     * This is addModifier version for Iterable input.
+
+     * @return Builder
+     */
+    //CS304 Issue link: https://github.com/square/javapoet/issues/841
+    public Builder addModifiers(Iterable<Modifier> modifiers){
+      checkNotNull(modifiers, "modifiers == null");
+      for (Modifier modifier : modifiers){
+        this.modifiers.add(modifier);
+      }
+      return this;
+    }
 
     public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkArgument(typeVariables != null, "typeVariables == null");
