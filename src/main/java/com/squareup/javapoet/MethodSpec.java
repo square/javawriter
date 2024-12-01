@@ -451,7 +451,12 @@ public final class MethodSpec {
     }
 
     public Builder addComment(String format, Object... args) {
-      code.add("// " + format + "\n", args);
+      String[] lines = format.split("\\R");
+      code.add("/*\n");
+      for (String line : lines) {
+        code.add("* " + line + "\n");
+      }
+      code.add("**/\n");
       return this;
     }
 
