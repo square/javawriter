@@ -115,8 +115,28 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(
+      ClassName rawType, Iterable<? extends TypeName> typeArguments) {
+    ArrayList<TypeName> typeArgumentsList = new ArrayList<>();
+    for (TypeName typeArgument : typeArguments) {
+      typeArgumentsList.add(typeArgument);
+    }
+    return new ParameterizedTypeName(null, rawType, typeArgumentsList);
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
   public static ParameterizedTypeName get(Class<?> rawType, Type... typeArguments) {
     return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(
+      Class<?> rawType, Iterable<? extends Type> typeArguments) {
+    ArrayList<Type> typeArgumentsList = new ArrayList<>();
+    for (Type typeArgument : typeArguments) {
+      typeArgumentsList.add(typeArgument);
+    }
+    return get(rawType, typeArgumentsList.toArray(new Type[0]));
   }
 
   /** Returns a parameterized type equivalent to {@code type}. */
