@@ -39,7 +39,7 @@ public final class ArrayTypeName extends TypeName {
     this.componentType = checkNotNull(componentType, "rawType == null");
   }
 
-  @Override public ArrayTypeName annotated(List<AnnotationSpec> annotations) {
+  @Override public ArrayTypeName annotated(List<? extends AnnotationSpec> annotations) {
     return new ArrayTypeName(componentType, concatAnnotations(annotations));
   }
 

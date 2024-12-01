@@ -123,6 +123,18 @@ public final class ParameterSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
+  public static Builder builder(TypeName type, String name,
+      Iterable<? extends Modifier> modifiers) {
+    checkNotNull(type, "type == null");
+    checkArgument(isValidParameterName(name), "not a valid name: %s", name);
+    return new Builder(type, name)
+        .addModifiers(modifiers);
+  }
+
+  public static Builder builder(Type type, String name, Iterable<? extends Modifier> modifiers) {
+    return builder(TypeName.get(type), name, modifiers);
+  }
+
   public Builder toBuilder() {
     return toBuilder(type, name);
   }
@@ -184,7 +196,7 @@ public final class ParameterSpec {
       return this;
     }
 
-    public Builder addModifiers(Iterable<Modifier> modifiers) {
+    public Builder addModifiers(Iterable<? extends Modifier> modifiers) {
       checkNotNull(modifiers, "modifiers == null");
       for (Modifier modifier : modifiers) {
         if (!modifier.equals(Modifier.FINAL)) {

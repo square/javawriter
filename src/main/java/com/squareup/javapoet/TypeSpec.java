@@ -474,6 +474,11 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
+      Util.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
     public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkArgument(typeVariables != null, "typeVariables == null");
       for (TypeVariableName typeVariable : typeVariables) {
@@ -606,6 +611,14 @@ public final class TypeSpec {
     }
 
     public Builder addField(Type type, String name, Modifier... modifiers) {
+      return addField(TypeName.get(type), name, modifiers);
+    }
+
+    public Builder addField(TypeName type, String name, Iterable<Modifier> modifiers) {
+      return addField(FieldSpec.builder(type, name, modifiers).build());
+    }
+
+    public Builder addField(Type type, String name, Iterable<Modifier> modifiers) {
       return addField(TypeName.get(type), name, modifiers);
     }
 

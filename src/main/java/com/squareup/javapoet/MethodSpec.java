@@ -357,7 +357,7 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addModifiers(Iterable<Modifier> modifiers) {
+    public Builder addModifiers(Iterable<? extends Modifier> modifiers) {
       checkNotNull(modifiers, "modifiers == null");
       for (Modifier modifier : modifiers) {
         this.modifiers.add(modifier);
@@ -406,6 +406,15 @@ public final class MethodSpec {
     }
 
     public Builder addParameter(Type type, String name, Modifier... modifiers) {
+      return addParameter(TypeName.get(type), name, modifiers);
+    }
+
+    public Builder addParameter(TypeName type, String name,
+        Iterable<? extends Modifier> modifiers) {
+      return addParameter(ParameterSpec.builder(type, name, modifiers).build());
+    }
+
+    public Builder addParameter(Type type, String name, Iterable<? extends Modifier> modifiers) {
       return addParameter(TypeName.get(type), name, modifiers);
     }
 

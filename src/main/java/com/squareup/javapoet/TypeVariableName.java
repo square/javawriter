@@ -49,8 +49,8 @@ public final class TypeVariableName extends TypeName {
     }
   }
 
-  @Override public TypeVariableName annotated(List<AnnotationSpec> annotations) {
-    return new TypeVariableName(name, bounds, annotations);
+  @Override public TypeVariableName annotated(List<? extends AnnotationSpec> annotations) {
+    return new TypeVariableName(name, bounds, Util.asList(annotations));
   }
 
   @Override public TypeName withoutAnnotations() {
@@ -66,9 +66,12 @@ public final class TypeVariableName extends TypeName {
   }
 
   public TypeVariableName withBounds(List<? extends TypeName> bounds) {
-    ArrayList<TypeName> newBounds = new ArrayList<>();
-    newBounds.addAll(this.bounds);
-    newBounds.addAll(bounds);
+    return withBounds((Iterable<? extends TypeName>) bounds);
+  }
+
+  public TypeVariableName withBounds(Iterable<? extends TypeName> bounds) {
+    ArrayList<TypeName> newBounds = new ArrayList<>(this.bounds);
+    Util.addAll(newBounds, bounds);
     return new TypeVariableName(name, newBounds, annotations);
   }
 
@@ -92,6 +95,16 @@ public final class TypeVariableName extends TypeName {
   /** Returns type variable named {@code name} with {@code bounds}. */
   public static TypeVariableName get(String name, TypeName... bounds) {
     return TypeVariableName.of(name, Arrays.asList(bounds));
+  }
+
+  /** Returns type variable named {@code name} with {@code bounds}. */
+  public static TypeVariableName get(String name, List<TypeName> bounds) {
+    return TypeVariableName.of(name, bounds);
+  }
+
+  /** Returns type variable named {@code name} with {@code bounds}. */
+  public static TypeVariableName get(String name, Iterable<? extends TypeName> bounds) {
+    return TypeVariableName.of(name, Util.asList(bounds));
   }
 
   /** Returns type variable named {@code name} with {@code bounds}. */

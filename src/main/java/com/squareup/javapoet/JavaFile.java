@@ -301,11 +301,16 @@ public final class JavaFile {
     }
 
     public Builder addStaticImport(ClassName className, String... names) {
-      checkArgument(className != null, "className == null");
       checkArgument(names != null, "names == null");
       checkArgument(names.length > 0, "names array is empty");
+      return addStaticImport(className, Arrays.asList(names));
+    }
+
+    public Builder addStaticImport(ClassName className, Iterable<? extends String> names) {
+      checkArgument(className != null, "className == null");
+      checkArgument(names != null, "names == null");
       for (String name : names) {
-        checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
+        checkArgument(name != null, "null entry in names array: %s", names);
         staticImports.add(className.canonicalName + "." + name);
       }
       return this;

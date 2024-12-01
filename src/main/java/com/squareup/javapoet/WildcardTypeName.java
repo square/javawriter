@@ -53,7 +53,7 @@ public final class WildcardTypeName extends TypeName {
     }
   }
 
-  @Override public WildcardTypeName annotated(List<AnnotationSpec> annotations) {
+  @Override public WildcardTypeName annotated(List<? extends AnnotationSpec> annotations) {
     return new WildcardTypeName(upperBounds, lowerBounds, concatAnnotations(annotations));
   }
 

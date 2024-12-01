@@ -112,7 +112,11 @@ public class TypeName {
     return annotated(Arrays.asList(annotations));
   }
 
-  public TypeName annotated(List<AnnotationSpec> annotations) {
+  public TypeName annotated(List<? extends AnnotationSpec> annotations) {
+    return annotated((Iterable<? extends AnnotationSpec>) annotations);
+  }
+
+  public TypeName annotated(Iterable<? extends AnnotationSpec> annotations) {
     Util.checkNotNull(annotations, "annotations == null");
     return new TypeName(keyword, concatAnnotations(annotations));
   }
@@ -124,9 +128,10 @@ public class TypeName {
     return new TypeName(keyword);
   }
 
-  protected final List<AnnotationSpec> concatAnnotations(List<AnnotationSpec> annotations) {
+  protected final List<AnnotationSpec> concatAnnotations(
+      Iterable<? extends AnnotationSpec> annotations) {
     List<AnnotationSpec> allAnnotations = new ArrayList<>(this.annotations);
-    allAnnotations.addAll(annotations);
+    Util.addAll(allAnnotations, annotations);
     return allAnnotations;
   }
 
@@ -366,11 +371,20 @@ public class TypeName {
 
   /** Converts an array of types to a list of type names. */
   static List<TypeName> list(Type[] types) {
+    return list(Arrays.asList(types), new LinkedHashMap<>());
+  }
+
+  /** Converts an array of types to a list of type names. */
+  static List<TypeName> list(Iterable<? extends Type> types) {
     return list(types, new LinkedHashMap<>());
   }
 
   static List<TypeName> list(Type[] types, Map<Type, TypeVariableName> map) {
-    List<TypeName> result = new ArrayList<>(types.length);
+    return list(Arrays.asList(types), map);
+  }
+
+  static List<TypeName> list(Iterable<? extends Type> types, Map<Type, TypeVariableName> map) {
+    List<TypeName> result = Util.newArrayListWithSize(types);
     for (Type type : types) {
       result.add(get(type, map));
     }

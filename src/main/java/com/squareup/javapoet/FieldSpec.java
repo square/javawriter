@@ -97,6 +97,19 @@ public final class FieldSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
+  public static Builder builder(TypeName type, String name,
+      Iterable<? extends Modifier> modifiers) {
+    checkNotNull(type, "type == null");
+    checkNotNull(modifiers, "modifiers == null");
+    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+    return new Builder(type, name)
+        .addModifiers(modifiers);
+  }
+
+  public static Builder builder(Type type, String name, Iterable<? extends Modifier> modifiers) {
+    return builder(TypeName.get(type), name, modifiers);
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(type, name);
     builder.javadoc.add(javadoc);
@@ -155,6 +168,12 @@ public final class FieldSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
+    public Builder addModifiers(Iterable<? extends Modifier> modifiers) {
+      checkNotNull(modifiers, "modifiers == null");
+      Util.addAll(this.modifiers, modifiers);
       return this;
     }
 

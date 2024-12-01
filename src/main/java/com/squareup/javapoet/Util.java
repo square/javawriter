@@ -128,4 +128,32 @@ final class Util {
     result.append('"');
     return result.toString();
   }
+
+  static <T> void addAll(Collection<? super T> c, Iterable<? extends T> elements) {
+    for (T element : elements) {
+      c.add(element);
+    }
+  }
+
+  static int sizeOrDefault(Iterable<?> typeArguments) {
+    if (typeArguments instanceof Collection<?>)
+      return ((Collection<?>) typeArguments).size();
+    else
+      return 0;
+  }
+
+  static <T> ArrayList<T> newArrayListWithSize(Iterable<?> typeArguments) {
+    return new ArrayList<>(sizeOrDefault(typeArguments));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> List<T> asList(Iterable<? extends T> elements) {
+    if (elements instanceof List<?>)
+      return (List<T>) elements;
+    List<T> result = newArrayListWithSize(elements);
+    for (T element : elements) {
+      result.add(element);
+    }
+    return result;
+  }
 }

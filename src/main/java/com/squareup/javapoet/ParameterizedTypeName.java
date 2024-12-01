@@ -53,7 +53,7 @@ public final class ParameterizedTypeName extends TypeName {
     }
   }
 
-  @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
+  @Override public ParameterizedTypeName annotated(List<? extends AnnotationSpec> annotations) {
     return new ParameterizedTypeName(
         enclosingType, rawType, typeArguments, concatAnnotations(annotations));
   }
@@ -116,6 +116,23 @@ public final class ParameterizedTypeName extends TypeName {
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
   public static ParameterizedTypeName get(Class<?> rawType, Type... typeArguments) {
+    return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(ClassName rawType,
+      Iterable<? extends TypeName> typeArguments) {
+    return new ParameterizedTypeName(null, rawType, Util.asList(typeArguments));
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(ClassName rawType, List<TypeName> typeArguments) {
+    return new ParameterizedTypeName(null, rawType, typeArguments);
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(Class<?> rawType,
+      Iterable<? extends Type> typeArguments) {
     return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
   }
 
