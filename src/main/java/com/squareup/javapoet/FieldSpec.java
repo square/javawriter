@@ -158,6 +158,13 @@ public final class FieldSpec {
       return this;
     }
 
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
+      for (Modifier modifier : modifiers) {
+        this.modifiers.add(modifier);
+      }
+      return this;
+    }
+
     public Builder initializer(String format, Object... args) {
       return initializer(CodeBlock.of(format, args));
     }

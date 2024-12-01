@@ -474,6 +474,13 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
+      for (Modifier modifier : modifiers) {
+        this.modifiers.add(modifier);
+      }
+      return this;
+    }
+
     public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkArgument(typeVariables != null, "typeVariables == null");
       for (TypeVariableName typeVariable : typeVariables) {
