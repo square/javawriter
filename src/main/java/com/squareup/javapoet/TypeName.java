@@ -296,7 +296,7 @@ public class TypeName {
         }
         return enclosing instanceof ParameterizedTypeName
             ? ((ParameterizedTypeName) enclosing).nestedClass(
-            rawType.simpleName(), typeArgumentNames)
+            rawType.packageName()+"."+rawType.simpleName(), typeArgumentNames)
             : new ParameterizedTypeName(null, rawType, typeArgumentNames);
       }
 

@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.StreamSupport;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -70,10 +72,16 @@ public final class CodeBlock {
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
   final List<Object> args;
+  private Object result;
 
   private CodeBlock(Builder builder) {
     this.formatParts = Util.immutableList(builder.formatParts);
     this.args = Util.immutableList(builder.args);
+    this.result=null;
+  }
+
+  public void setResult(Object result) {
+    this.result = result;
   }
 
   public boolean isEmpty() {
@@ -100,10 +108,12 @@ public final class CodeBlock {
       throw new AssertionError();
     }
   }
-
-  public static CodeBlock of(String format, Object... args) {
-    return new Builder().add(format, args).build();
+  public static  <T>  CodeBlock of(String format, T... args) {
+    CodeBlock re= new Builder().add(format, args).build();
+    re.setResult(args[0]);
+    return re;
   }
+
 
   /**
    * Joins {@code codeBlocks} into a single {@link CodeBlock}, each separated by {@code separator}.
@@ -467,4 +477,16 @@ public final class CodeBlock {
       return builder.build();
     }
   }
+  public String toString(CodeBlock codeBlock){
+    StringBuilder out = new StringBuilder();
+    try {
+      new CodeWriter(out).emit(codeBlock);
+      String re=codeBlock.result.getClass().getCanonicalName();
+
+      return re;
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
+  }
 }
+

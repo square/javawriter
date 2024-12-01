@@ -196,4 +196,36 @@ public class TypeNameTest {
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
     assertFalse(a.equals(null));
   }
+  private void test_Regular_class(){}
+  @Test public void enums_test(){
+    CodeBlockTest.test_enum test_case= CodeBlockTest.test_enum.A;
+    String test_e=test_case.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_case);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
+  @Test public void int_test(){
+    Integer test_case=1;
+    String test_e=test_case.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_case);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
+  @Test public void double_test(){
+    Double test_case=1.0;
+    String test_e=test_case.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_case);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
+  @Test public void String_test(){
+    String test_case="";
+    String test_e=test_case.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_case);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
+  class test_class{}
+  @Test public void class_test(){
+    CodeBlockTest.test_class test_case=new CodeBlockTest.test_class();
+    String test_e=test_case.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_case);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
 }

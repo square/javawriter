@@ -348,4 +348,10 @@ public final class CodeBlockTest {
 
     assertThat(block.toString()).isEmpty();
   }
+  public enum test_enum{A,B};
+  @Test public void enums(){
+    String test_e=test_enum.A.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_enum.A);
+    assertThat(a.toString(a)).isEqualTo(test_e);
+  }
 }
