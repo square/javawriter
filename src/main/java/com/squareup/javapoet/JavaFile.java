@@ -25,13 +25,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -63,7 +57,7 @@ public final class JavaFile {
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
   private final String indent;
-
+  public final List<AnnotationSpec> packageAnnotations;
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
@@ -71,7 +65,7 @@ public final class JavaFile {
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
-
+    this.packageAnnotations = builder.annotations;
     Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
     fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
     this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
@@ -87,17 +81,17 @@ public final class JavaFile {
   public void writeTo(Appendable out) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(
-        NULL_APPENDABLE,
-        indent,
-        staticImports,
-        alwaysQualify
+            NULL_APPENDABLE,
+            indent,
+            staticImports,
+            alwaysQualify
     );
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
     CodeWriter codeWriter
-        = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
+            = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
     emit(codeWriter);
   }
 
@@ -129,7 +123,7 @@ public final class JavaFile {
    */
   public Path writeToPath(Path directory, Charset charset) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
-        "path %s exists but is not a directory.", directory);
+            "path %s exists but is not a directory.", directory);
     Path outputDirectory = directory;
     if (!packageName.isEmpty()) {
       for (String packageComponent : packageName.split("\\.")) {
@@ -163,11 +157,11 @@ public final class JavaFile {
   /** Writes this to {@code filer}. */
   public void writeTo(Filer filer) throws IOException {
     String fileName = packageName.isEmpty()
-        ? typeSpec.name
-        : packageName + "." + typeSpec.name;
+            ? typeSpec.name
+            : packageName + "." + typeSpec.name;
     List<Element> originatingElements = typeSpec.originatingElements;
     JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
-        originatingElements.toArray(new Element[originatingElements.size()]));
+            originatingElements.toArray(new Element[originatingElements.size()]));
     try (Writer writer = filerSourceFile.openWriter()) {
       writeTo(writer);
     } catch (Exception e) {
@@ -179,11 +173,16 @@ public final class JavaFile {
     }
   }
 
+
+
   private void emit(CodeWriter codeWriter) throws IOException {
     codeWriter.pushPackage(packageName);
 
     if (!fileComment.isEmpty()) {
       codeWriter.emitComment(fileComment);
+    }
+    if (!packageAnnotations.isEmpty()){
+      codeWriter.emitAnnotations(packageAnnotations, false);
     }
 
     if (!packageName.isEmpty()) {
@@ -202,8 +201,8 @@ public final class JavaFile {
     for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
       // TODO what about nested types like java.util.Map.Entry?
       if (skipJavaLangImports
-          && className.packageName().equals("java.lang")
-          && !alwaysQualify.contains(className.simpleName)) {
+              && className.packageName().equals("java.lang")
+              && !alwaysQualify.contains(className.simpleName)) {
         continue;
       }
       codeWriter.emit("import $L;\n", className.withoutAnnotations());
@@ -242,9 +241,9 @@ public final class JavaFile {
 
   public JavaFileObject toJavaFileObject() {
     URI uri = URI.create((packageName.isEmpty()
-        ? typeSpec.name
-        : packageName.replace('.', '/') + '/' + typeSpec.name)
-        + Kind.SOURCE.extension);
+            ? typeSpec.name
+            : packageName.replace('.', '/') + '/' + typeSpec.name)
+            + Kind.SOURCE.extension);
     return new SimpleJavaFileObject(uri, Kind.SOURCE) {
       private final long lastModified = System.currentTimeMillis();
       @Override public String getCharContent(boolean ignoreEncodingErrors) {
@@ -279,13 +278,15 @@ public final class JavaFile {
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
     private String indent = "  ";
-
+    public final List<AnnotationSpec> annotations;
     public final Set<String> staticImports = new TreeSet<>();
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;
       this.typeSpec = typeSpec;
+      this.annotations = new ArrayList<>();
     }
+
 
     public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
@@ -331,6 +332,28 @@ public final class JavaFile {
 
     public JavaFile build() {
       return new JavaFile(this);
+    }
+
+    public Builder addPkgAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
+      return this;
+    }
+
+    public Builder addPkgAnnotation(AnnotationSpec annotationSpec) {
+      checkNotNull(annotationSpec, "annotationSpec == null");
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addPkgAnnotation(ClassName annotation) {
+      return addPkgAnnotation(AnnotationSpec.builder(annotation).build());
+    }
+
+    public Builder addPkgAnnotation(Class<?> annotation) {
+      return addPkgAnnotation(ClassName.get(annotation));
     }
   }
 }
