@@ -19,11 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -122,6 +118,15 @@ public final class ParameterizedTypeName extends TypeName {
   /** Returns a parameterized type equivalent to {@code type}. */
   public static ParameterizedTypeName get(ParameterizedType type) {
     return get(type, new LinkedHashMap<>());
+  }
+
+  /** Returns a TypeName type equivalent to the iterator */
+  public static TypeName get(Iterator<? extends TypeName> i)
+  {
+    while (i.hasNext()) {
+      return i.next();
+    }
+    return null;
   }
 
   /** Returns a parameterized type equivalent to {@code type}. */
