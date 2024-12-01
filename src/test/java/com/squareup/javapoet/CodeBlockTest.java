@@ -348,4 +348,12 @@ public final class CodeBlockTest {
 
     assertThat(block.toString()).isEmpty();
   }
+  @Test public void dollarSignTruncated (){
+    CodeBlock block =
+            CodeBlock.builder()
+                    .add(CodeBlock.of("($>$Z"))
+                    .add(CodeBlock.of(")$<"))
+                    .build();
+    assertThat(block.toString()).isEqualTo("()");
+  }
 }

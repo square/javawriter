@@ -91,10 +91,13 @@ public final class CodeBlock {
     return toString().hashCode();
   }
 
-  @Override public String toString() {
+  @Override public String
+  toString() {
     StringBuilder out = new StringBuilder();
     try {
-      new CodeWriter(out).emit(this);
+      CodeWriter codeWriter = new CodeWriter(out);
+      codeWriter.emit(this);
+      codeWriter.flush();
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -357,6 +360,7 @@ public final class CodeBlock {
       if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
+      if (o instanceof FieldSpec) return TypeName.get((FieldSpec) o);
       throw new IllegalArgumentException("expected type but was " + o);
     }
 
