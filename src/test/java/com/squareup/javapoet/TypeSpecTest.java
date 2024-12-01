@@ -1990,6 +1990,21 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void multipleDuplicateSuperinterfaceAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addSuperinterfaces(Arrays.asList(
+            TypeName.get(Serializable.class),
+            TypeName.get(Serializable.class)))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.io.Serializable;\n"
+        + "\n"
+        + "class Taco implements Serializable {\n"
+        + "}\n");
+  }
+
   @Test public void nullModifiersAddition() {
     try {
       TypeSpec.classBuilder("Taco").addModifiers((Modifier) null).build();
