@@ -450,8 +450,24 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addComment(String format, Object... args) {
-      code.add("// " + format + "\n", args);
+    /**
+     * This method checks for "\n" in the input and handles them appropriately
+     * @param format the input format, usually use $S for string literal.
+     * @param args the Object array of input comments.
+     */
+    public Builder addComment(String format, Object... args){
+      String CommentArray[] = format.split("\n");
+      for(int i=0;i<CommentArray.length;i++){
+        if(CommentArray[i].contains("$S")){
+          String ArgsArray[] = String.valueOf(args[i]).split("\n");
+          code.add("// " + CommentArray[i] + "\n", ArgsArray[0]);
+          for(int j=1;j<ArgsArray.length;j++){
+            code.add("// $S \n", ArgsArray[j]);
+          }
+        }else{
+          code.add("// " + CommentArray[i] + "\n");
+        }
+      }
       return this;
     }
 
