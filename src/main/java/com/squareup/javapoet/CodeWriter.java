@@ -323,6 +323,9 @@ final class CodeWriter {
     }
     return this;
   }
+  public void flush() throws IOException {
+    out.unclosedFlush();
+  }
 
   public CodeWriter emitWrappingSpace() throws IOException {
     out.wrappingSpace(indentLevel + 2);
@@ -504,6 +507,7 @@ final class CodeWriter {
       out.append(line);
       trailingNewline = false;
     }
+
     return this;
   }
 

@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
 
 public class FieldSpecTest {
   @Test public void equalsAndHashCode() {
@@ -62,5 +63,18 @@ public class FieldSpecTest {
 
     builder.modifiers.remove(1);
     assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
+  @Test public void testIssue490(){
+    FieldSpec spec = FieldSpec.builder(float.class, "foo").build();
+    CodeBlock test =CodeBlock.builder().add("$T temp= $L", spec,1f).build();
+    assertThat(test.toString()).isEqualTo("float temp= 1.0");
+  }
+  @Test public void testIssue490_2(){
+    FieldSpec spec = FieldSpec.builder(float.class, "foo").build();
+    MethodSpec test = MethodSpec.methodBuilder("test")
+            .returns(spec.type)
+            .addStatement("$T temp= $L", spec,1f)
+            .build();
+   assertThat(test.toString()).contains("float temp= 1.0");
   }
 }

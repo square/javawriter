@@ -252,6 +252,12 @@ public class TypeName {
     return get(mirror, new LinkedHashMap<>());
   }
 
+  public static TypeName get(FieldSpec spec){
+   return spec.type;
+  }
+
+
+
   static TypeName get(TypeMirror mirror,
       final Map<TypeParameterElement, TypeVariableName> typeVariables) {
     return mirror.accept(new SimpleTypeVisitor8<TypeName, Void>() {
