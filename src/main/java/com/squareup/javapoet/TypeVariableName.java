@@ -49,8 +49,17 @@ public final class TypeVariableName extends TypeName {
     }
   }
 
+  /**
+   * Returns an newly created TypeVariableName object
+   * with several newly added annotations in a certain List.
+   *
+   * @param annotations the annotations need to be added.
+   * @return the TypeVariableName with newly added annotations.
+   */
   @Override public TypeVariableName annotated(List<AnnotationSpec> annotations) {
-    return new TypeVariableName(name, bounds, annotations);
+    //CS304 Issue link: https://github.com/square/javapoet/issues/826
+    //return new TypeVariableName(name, bounds, annotations);
+    return new TypeVariableName(name, bounds, concatAnnotations(annotations));
   }
 
   @Override public TypeName withoutAnnotations() {
