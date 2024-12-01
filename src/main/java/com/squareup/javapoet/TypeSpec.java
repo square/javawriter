@@ -191,147 +191,32 @@ public final class TypeSpec {
     codeWriter.statementLine = -1;
 
     try {
+      // Emit Type Header
       if (enumName != null) {
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emit("$L", enumName);
-        if (!anonymousTypeArguments.formatParts.isEmpty()) {
-          codeWriter.emit("(");
-          codeWriter.emit(anonymousTypeArguments);
-          codeWriter.emit(")");
+        boolean hasBody = emitEnumHeader(codeWriter, enumName);
+        if (!hasBody) {
+          return;
         }
-        if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
-          return; // Avoid unnecessary braces "{}".
-        }
-        codeWriter.emit(" {\n");
       } else if (anonymousTypeArguments != null) {
-        TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
-        codeWriter.emit("new $T(", supertype);
-        codeWriter.emit(anonymousTypeArguments);
-        codeWriter.emit(") {\n");
+        emitAnonymousTypeArgsHeader(codeWriter);
       } else {
-        // Push an empty type (specifically without nested types) for type-resolution.
-        codeWriter.pushType(new TypeSpec(this));
-
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
-        if (kind == Kind.ANNOTATION) {
-          codeWriter.emit("$L $L", "@interface", name);
-        } else {
-          codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
-        }
-        codeWriter.emitTypeVariables(typeVariables);
-
-        List<TypeName> extendsTypes;
-        List<TypeName> implementsTypes;
-        if (kind == Kind.INTERFACE) {
-          extendsTypes = superinterfaces;
-          implementsTypes = Collections.emptyList();
-        } else {
-          extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? Collections.emptyList()
-              : Collections.singletonList(superclass);
-          implementsTypes = superinterfaces;
-        }
-
-        if (!extendsTypes.isEmpty()) {
-          codeWriter.emit(" extends");
-          boolean firstType = true;
-          for (TypeName type : extendsTypes) {
-            if (!firstType) codeWriter.emit(",");
-            codeWriter.emit(" $T", type);
-            firstType = false;
-          }
-        }
-
-        if (!implementsTypes.isEmpty()) {
-          codeWriter.emit(" implements");
-          boolean firstType = true;
-          for (TypeName type : implementsTypes) {
-            if (!firstType) codeWriter.emit(",");
-            codeWriter.emit(" $T", type);
-            firstType = false;
-          }
-        }
-
-        codeWriter.popType();
-
-        codeWriter.emit(" {\n");
+        emitBasicHeader(codeWriter, implicitModifiers);
       }
 
       codeWriter.pushType(this);
       codeWriter.indent();
       boolean firstMember = true;
-      boolean needsSeparator = kind == Kind.ENUM
-              && (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty());
-      for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
-          i.hasNext(); ) {
-        Map.Entry<String, TypeSpec> enumConstant = i.next();
-        if (!firstMember) codeWriter.emit("\n");
-        enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
-        firstMember = false;
-        if (i.hasNext()) {
-          codeWriter.emit(",\n");
-        } else if (!needsSeparator) {
-          codeWriter.emit("\n");
-        }
-      }
 
-      if (needsSeparator) codeWriter.emit(";\n");
+      // Emit Type Content
+      firstMember = emitEnumConstants(codeWriter, firstMember);
+      firstMember = emitStaticFields(codeWriter, firstMember);
+      firstMember = emitNonStaticFields(codeWriter, firstMember);
+      firstMember = emitInitializerBlock(codeWriter, firstMember);
+      firstMember = emitConstructors(codeWriter, firstMember);
+      firstMember = emitMethods(codeWriter, firstMember);
+      emitSubtypes(codeWriter, firstMember);
 
-      // Static fields.
-      for (FieldSpec fieldSpec : fieldSpecs) {
-        if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
-        if (!firstMember) codeWriter.emit("\n");
-        fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
-        firstMember = false;
-      }
-
-      if (!staticBlock.isEmpty()) {
-        if (!firstMember) codeWriter.emit("\n");
-        codeWriter.emit(staticBlock);
-        firstMember = false;
-      }
-
-      // Non-static fields.
-      for (FieldSpec fieldSpec : fieldSpecs) {
-        if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
-        if (!firstMember) codeWriter.emit("\n");
-        fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
-        firstMember = false;
-      }
-
-      // Initializer block.
-      if (!initializerBlock.isEmpty()) {
-        if (!firstMember) codeWriter.emit("\n");
-        codeWriter.emit(initializerBlock);
-        firstMember = false;
-      }
-
-      // Constructors.
-      for (MethodSpec methodSpec : methodSpecs) {
-        if (!methodSpec.isConstructor()) continue;
-        if (!firstMember) codeWriter.emit("\n");
-        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
-        firstMember = false;
-      }
-
-      // Methods (static and non-static).
-      for (MethodSpec methodSpec : methodSpecs) {
-        if (methodSpec.isConstructor()) continue;
-        if (!firstMember) codeWriter.emit("\n");
-        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
-        firstMember = false;
-      }
-
-      // Types.
-      for (TypeSpec typeSpec : typeSpecs) {
-        if (!firstMember) codeWriter.emit("\n");
-        typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);
-        firstMember = false;
-      }
-
+      // Close Type
       codeWriter.unindent();
       codeWriter.popType();
       codeWriter.popTypeVariables(typeVariables);
@@ -342,6 +227,168 @@ public final class TypeSpec {
       }
     } finally {
       codeWriter.statementLine = previousStatementLine;
+    }
+  }
+
+  private boolean emitEnumHeader(CodeWriter codeWriter, String enumName) throws IOException {
+    codeWriter.emitJavadoc(javadoc);
+    codeWriter.emitAnnotations(annotations, false);
+    codeWriter.emit("$L", enumName);
+    if (!anonymousTypeArguments.formatParts.isEmpty()) {
+      codeWriter.emit("(");
+      codeWriter.emit(anonymousTypeArguments);
+      codeWriter.emit(")");
+    }
+    if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
+      return false; // Avoid unnecessary braces "{}".
+    }
+    codeWriter.emit(" {\n");
+    return true;
+  }
+
+  private void emitAnonymousTypeArgsHeader(CodeWriter codeWriter) throws IOException {
+    TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
+    codeWriter.emit("new $T(", supertype);
+    codeWriter.emit(anonymousTypeArguments);
+    codeWriter.emit(") {\n");
+  }
+
+  private void emitBasicHeader(CodeWriter codeWriter,
+      Set<Modifier> implicitModifiers) throws IOException {
+
+    // Push an empty type (specifically without nested types) for type-resolution.
+    codeWriter.pushType(new TypeSpec(this));
+
+    codeWriter.emitJavadoc(javadoc);
+    codeWriter.emitAnnotations(annotations, false);
+    codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+    if (kind == Kind.ANNOTATION) {
+      codeWriter.emit("$L $L", "@interface", name);
+    } else {
+      codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+    }
+    codeWriter.emitTypeVariables(typeVariables);
+
+    List<TypeName> extendsTypes;
+    List<TypeName> implementsTypes;
+    if (kind == Kind.INTERFACE) {
+      extendsTypes = superinterfaces;
+      implementsTypes = Collections.emptyList();
+    } else {
+      extendsTypes = superclass.equals(ClassName.OBJECT)
+          ? Collections.emptyList()
+          : Collections.singletonList(superclass);
+      implementsTypes = superinterfaces;
+    }
+
+    if (!extendsTypes.isEmpty()) {
+      codeWriter.emit(" extends");
+      boolean firstType = true;
+      for (TypeName type : extendsTypes) {
+        if (!firstType) codeWriter.emit(",");
+        codeWriter.emit(" $T", type);
+        firstType = false;
+      }
+    }
+
+    if (!implementsTypes.isEmpty()) {
+      codeWriter.emit(" implements");
+      boolean firstType = true;
+      for (TypeName type : implementsTypes) {
+        if (!firstType) codeWriter.emit(",");
+        codeWriter.emit(" $T", type);
+        firstType = false;
+      }
+    }
+
+    codeWriter.popType();
+
+    codeWriter.emit(" {\n");
+  }
+
+  private boolean emitEnumConstants(CodeWriter codeWriter, boolean firstMember) throws IOException {
+    boolean needsSeparator = kind == Kind.ENUM
+            && (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty());
+    for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
+        i.hasNext(); ) {
+      Map.Entry<String, TypeSpec> enumConstant = i.next();
+      if (!firstMember) codeWriter.emit("\n");
+      enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
+      firstMember = false;
+      if (i.hasNext()) {
+        codeWriter.emit(",\n");
+      } else if (!needsSeparator) {
+        codeWriter.emit("\n");
+      }
+    }
+
+    if (needsSeparator) codeWriter.emit(";\n");
+    return firstMember;
+  }
+
+  private boolean emitStaticFields(CodeWriter codeWriter, boolean firstMember) throws IOException {
+    for (FieldSpec fieldSpec : fieldSpecs) {
+      if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+      firstMember = false;
+    }
+
+    if (!staticBlock.isEmpty()) {
+      if (!firstMember) codeWriter.emit("\n");
+      codeWriter.emit(staticBlock);
+      firstMember = false;
+    }
+    return firstMember;
+  }
+
+  private boolean emitNonStaticFields(CodeWriter codeWriter, boolean firstMember)
+      throws IOException {
+    for (FieldSpec fieldSpec : fieldSpecs) {
+      if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+      firstMember = false;
+    }
+    return firstMember;
+  }
+
+  private boolean emitInitializerBlock(CodeWriter codeWriter, boolean firstMember)
+      throws IOException {
+    if (!initializerBlock.isEmpty()) {
+      if (!firstMember) codeWriter.emit("\n");
+      codeWriter.emit(initializerBlock);
+      firstMember = false;
+    }
+    return firstMember;
+  }
+
+  private boolean emitConstructors(CodeWriter codeWriter, boolean firstMember)
+      throws IOException {
+    for (MethodSpec methodSpec : methodSpecs) {
+      if (!methodSpec.isConstructor()) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
+      firstMember = false;
+    }
+    return firstMember;
+  }
+
+  private boolean emitMethods(CodeWriter codeWriter, boolean firstMember) throws IOException {
+    for (MethodSpec methodSpec : methodSpecs) {
+      if (methodSpec.isConstructor()) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
+      firstMember = false;
+    }
+    return firstMember;
+  }
+
+  private void emitSubtypes(CodeWriter codeWriter, boolean firstMember) throws IOException {
+    for (TypeSpec typeSpec : typeSpecs) {
+      if (!firstMember) codeWriter.emit("\n");
+      typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);
+      firstMember = false;
     }
   }
 
