@@ -25,13 +25,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -63,7 +57,7 @@ public final class JavaFile {
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
   private final String indent;
-
+  public final List<AnnotationSpec> packageAnnotations;
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
@@ -71,7 +65,7 @@ public final class JavaFile {
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
-
+    this.packageAnnotations = builder.annotations;
     Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
     fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
     this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
@@ -179,11 +173,16 @@ public final class JavaFile {
     }
   }
 
+
+
   private void emit(CodeWriter codeWriter) throws IOException {
     codeWriter.pushPackage(packageName);
 
     if (!fileComment.isEmpty()) {
       codeWriter.emitComment(fileComment);
+    }
+    if (!packageAnnotations.isEmpty()){
+      codeWriter.emitAnnotations(packageAnnotations, false);
     }
 
     if (!packageName.isEmpty()) {
@@ -279,13 +278,15 @@ public final class JavaFile {
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
     private String indent = "  ";
-
+    public final List<AnnotationSpec> annotations;
     public final Set<String> staticImports = new TreeSet<>();
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;
       this.typeSpec = typeSpec;
+      this.annotations = new ArrayList<>();
     }
+
 
     public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
@@ -331,6 +332,28 @@ public final class JavaFile {
 
     public JavaFile build() {
       return new JavaFile(this);
+    }
+
+    public Builder addPkgAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
+      return this;
+    }
+
+    public Builder addPkgAnnotation(AnnotationSpec annotationSpec) {
+      checkNotNull(annotationSpec, "annotationSpec == null");
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addPkgAnnotation(ClassName annotation) {
+      return addPkgAnnotation(AnnotationSpec.builder(annotation).build());
+    }
+
+    public Builder addPkgAnnotation(Class<?> annotation) {
+      return addPkgAnnotation(ClassName.get(annotation));
     }
   }
 }

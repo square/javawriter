@@ -21,3 +21,4 @@ classes
 obj
 
 .DS_Store
+/src/test/java/com/squareup/javapoet/PackageAnnotationTest.java
