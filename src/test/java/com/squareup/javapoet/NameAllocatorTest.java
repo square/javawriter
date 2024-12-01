@@ -108,4 +108,18 @@ public final class NameAllocatorTest {
     assertThat(innerAllocator2.newName("foo", 2)).isEqualTo("foo_");
     assertThat(innerAllocator2.newName("bar", 3)).isEqualTo("bar");
   }
+  //CS304 Issue link: https://github.com/square/javapoet/issues/774
+  @Test public void ignoringIgnorableChars() throws Exception {
+    NameAllocator nameAllocator = new NameAllocator();
+    assertThat(nameAllocator.newName("ab")).isEqualTo("ab");
+    assertThat(nameAllocator.newName("a\u0008b")).isEqualTo("ab_");
+  }
+
+  //CS304 Issue link: https://github.com/square/javapoet/issues/774
+  @Test public void multipleIgnorableChars() throws Exception {
+    NameAllocator nameAllocator = new NameAllocator();
+    assertThat(nameAllocator.newName("a\u007F\u0008c")).isEqualTo("ac");
+    assertThat(nameAllocator.newName("ac")).isEqualTo("ac_");
+  }
+
 }

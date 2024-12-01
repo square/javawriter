@@ -125,6 +125,12 @@ public final class NameAllocator implements Cloneable {
     return suggestion;
   }
 
+  //CS304 Issue link: https://github.com/square/javapoet/issues/774
+  /**
+   * To change a suggested name to a valid Java identifier name
+   * @param suggestion The suggested name
+   * @return a valid Java identifier name
+   */
   public static String toJavaIdentifier(String suggestion) {
     StringBuilder result = new StringBuilder();
     for (int i = 0; i < suggestion.length(); ) {
@@ -134,9 +140,10 @@ public final class NameAllocator implements Cloneable {
           && Character.isJavaIdentifierPart(codePoint)) {
         result.append("_");
       }
-
-      int validCodePoint = Character.isJavaIdentifierPart(codePoint) ? codePoint : '_';
-      result.appendCodePoint(validCodePoint);
+      if(!Character.isIdentifierIgnorable(codePoint)) {
+        int validCodePoint = Character.isJavaIdentifierPart(codePoint) ? codePoint : '_';
+        result.appendCodePoint(validCodePoint);
+      }
       i += Character.charCount(codePoint);
     }
     return result.toString();
