@@ -96,7 +96,7 @@ final class Util {
       case '\r': return "\\r"; /* \u000d: carriage return (CR) */
       case '\"': return "\"";  /* \u0022: double quote (") */
       case '\'': return "\\'"; /* \u0027: single quote (') */
-      case '\\': return "\\\\";  /* \u005c: backslash (\) */
+      case '\\': return "\\";  /* \u005c: backslash (\) */
       default:
         return isISOControl(c) ? String.format("\\u%04x", (int) c) : Character.toString(c);
     }

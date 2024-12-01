@@ -349,6 +349,33 @@ public final class CodeBlock {
     }
 
     private String argToString(Object o) {
+      if(o instanceof String){
+        int index = -1;
+        StringBuilder str= new StringBuilder();
+        char temp = '\\';
+        for(int i=0;i<((String) o).length();i++){
+          if(((String) o).charAt(i)==10){
+            if(i==0) {
+              str.append(temp).append("n");
+              index=i+1;
+            }else if(index==-1) {
+              str.append(((String) o).substring(0, i)).append(temp).append("n");
+              index=i+1;
+            }else {
+              str.append(((String) o).substring(index, i)).append(temp).append("n");
+              index=i+1;
+            }
+          }
+        }
+        if(index==-1){
+          return o != null ? String.valueOf(o) : null;
+        }
+        if(index!=((String) o).length() ){
+          str.append(((String) o).substring(index, ((String) o).length()));
+        }
+        return str.toString();
+
+      }
       return o != null ? String.valueOf(o) : null;
     }
 
