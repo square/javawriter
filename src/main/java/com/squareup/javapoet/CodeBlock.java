@@ -370,6 +370,12 @@ public final class CodeBlock {
       return this;
     }
 
+    public Builder beginControlFlow(Object... args) {
+      add("{\n", args);
+      indent();
+      return this;
+    }
+
     /**
      * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
      *     Shouldn't contain braces or newline characters.

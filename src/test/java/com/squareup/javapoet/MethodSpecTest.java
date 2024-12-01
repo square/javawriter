@@ -462,6 +462,57 @@ public final class MethodSpecTest {
         + "}\n");
   }
 
+  @Test public void controlBlockTestWithEmptyBeginBlock_1(){
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .beginControlFlow()
+            .addStatement("int year = 2022")
+            .endControlFlow()
+            .beginControlFlow()
+            .addStatement("int month = 4")
+            .endControlFlow()
+            .beginControlFlow()
+            .addStatement("int day = 22")
+            .endControlFlow()
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo("" +
+            "void method() {\n" +
+            "  {\n" +
+            "    int year = 2022;\n" +
+            "  }\n" +
+            "  {\n" +
+            "    int month = 4;\n" +
+            "  }\n" +
+            "  {\n" +
+            "    int day = 22;\n" +
+            "  }\n" +
+            "}\n");
+  }
+
+  @Test public void controlBlockTestWithEmptyBeginBlock_2(){
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .beginControlFlow(named("if ($field:N > $threshold:L)", m))
+            .nextControlFlow(named("else if ($field:N == $threshold:L)", m))
+            .endControlFlow()
+            .beginControlFlow()
+            .endControlFlow()
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  if (valueField > 5) {\n"
+            + "  } else if (valueField == 5) {\n"
+            + "  }\n"
+            + "  {\n"
+            + "  }\n"
+            + "}\n");
+
+  }
+
   @Test public void doWhileWithNamedCodeBlocks() {
     Map<String, Object> m = new HashMap<>();
     m.put("field", "valueField");

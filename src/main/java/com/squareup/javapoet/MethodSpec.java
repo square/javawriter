@@ -474,6 +474,12 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder beginControlFlow(Object... args) {
+      code.beginControlFlow(args);
+      return this;
+
+    }
+
     /**
      * @param codeBlock the control flow construct and its code, such as "if (foo == 5)".
      * Shouldn't contain braces or newline characters.
