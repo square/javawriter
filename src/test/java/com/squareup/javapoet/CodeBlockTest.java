@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -41,6 +42,15 @@ public final class CodeBlockTest {
   @Test public void of() {
     CodeBlock a = CodeBlock.of("$L taco", "delicious");
     assertThat(a.toString()).isEqualTo("delicious taco");
+  }
+
+  @Test public void ofStatement() {
+    CodeBlock a = CodeBlock.ofStatement("$L taco", "delicious");
+    assertThat(a.toString()).isEqualTo("delicious taco;\n");
+  }
+
+  @Test public void ofStatement2() {
+    assertThat(CodeBlock.ofStatement("println($L)", "\"hello world\"").toString()).isEqualTo("println(\"hello world\");\n");
   }
 
   @Test public void isEmpty() {
