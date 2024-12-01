@@ -362,6 +362,11 @@ final class CodeWriter {
       annotationSpec.emit(this, true);
     } else if (o instanceof CodeBlock) {
       CodeBlock codeBlock = (CodeBlock) o;
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.formatParts.addAll(codeBlock.formatParts);
+      builder.args.addAll(codeBlock.args);
+      builder.formatParts.remove("$[");
+      builder.formatParts.remove("$]");
       emit(codeBlock);
     } else {
       emitAndIndent(String.valueOf(o));
